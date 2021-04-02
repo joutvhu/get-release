@@ -1,6 +1,5 @@
 import * as core from '@actions/core';
 import {context} from '@actions/github';
-import {OctokitResponse} from '@octokit/types';
 import {Inputs, Outputs} from './constants';
 
 export interface ReleaseInputs {
@@ -30,24 +29,27 @@ export function getInputs(): ReleaseInputs {
     return result;
 }
 
-export function setOutputs(outputs: OctokitResponse<any>) {
+export function setOutputs(outputs: any) {
     // Get the outputs for the created release from the response
     const {
-        data: {
-            id,
-            url,
-            html_url,
-            upload_url,
-            assets_url,
-            name,
-            tag_name,
-            body,
-            draft,
-            prerelease
-        }
+        id,
+        node_id,
+        url,
+        html_url,
+        upload_url,
+        assets_url,
+        name,
+        tag_name,
+        body,
+        draft,
+        prerelease,
+        target_commitish,
+        created_at,
+        published_at
     } = outputs;
 
-    core.setOutput(Outputs.ID, id.toString());
+    core.setOutput(Outputs.Id, id.toString());
+    core.setOutput(Outputs.NodeId, node_id);
     core.setOutput(Outputs.Url, url);
     core.setOutput(Outputs.HtmlUrl, html_url);
     core.setOutput(Outputs.UploadUrl, upload_url);
@@ -57,4 +59,7 @@ export function setOutputs(outputs: OctokitResponse<any>) {
     core.setOutput(Outputs.Body, body);
     core.setOutput(Outputs.Draft, draft);
     core.setOutput(Outputs.PreRelease, prerelease);
+    core.setOutput(Outputs.TargetCommitish, target_commitish);
+    core.setOutput(Outputs.PreRelease, created_at);
+    core.setOutput(Outputs.PreRelease, published_at);
 }

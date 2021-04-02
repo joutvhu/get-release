@@ -4,7 +4,8 @@ export enum Inputs {
 }
 
 export enum Outputs {
-    ID = 'id',
+    Id = 'id',
+    NodeId = 'node_id',
     Url = 'url',
     HtmlUrl = 'html_url',
     AssetsUrl = 'assets_url',
@@ -13,5 +14,8 @@ export enum Outputs {
     Name = 'name',
     Body = 'body',
     Draft = 'draft',
-    PreRelease = 'prerelease'
+    PreRelease = 'prerelease',
+    TargetCommitish = 'target_commitish',
+    CreatedAt = 'created_at',
+    PublishedAt = 'published_at'
 }
