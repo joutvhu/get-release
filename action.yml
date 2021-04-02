@@ -5,10 +5,19 @@ inputs:
   tag_name:
     description: Specify tag instead of using checkout tag.
     required: false
+
   latest:
     description: Should get latest release?
     required: false
     default: 'false'
+  prerelease:
+    description: Find the latest release including pre-releases
+    required: false
+    default: 'false' # Default: ignore pre-releases when finding the latest release
+  draft:
+    description: Find the latest release including draft releases
+    required: false
+    default: 'false' # Default: ignore draft releases when finding the latest release
 runs:
   using: node12
   main: action/index.js

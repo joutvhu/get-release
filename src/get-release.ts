@@ -42,10 +42,16 @@ export function findLatestRelease(releases: any[]): any {
             const listResponse = await github.repos.listReleases({owner, repo});
 
             if (isSuccessStatusCode(listResponse.status)) {
+                const releaseList = listResponse.data
+                    .filter(release =>
+                        (!release.prerelease || inputs.prerelease) &&
+                        (!release.draft || inputs.draft));
+
                 // Find the latest release by `published_at`
-                const latestRelease: any = findLatestRelease(listResponse.data);
+                const latestRelease: any = findLatestRelease(releaseList);
                 if (latestRelease != null)
                     setOutputs(latestRelease);
+                else core.info('The latest release was not found');
             } else {
                 throw new Error(`Unexpected http ${listResponse.status} during get release list`);
             }

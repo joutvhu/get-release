@@ -5900,6 +5900,8 @@ var Inputs;
 (function (Inputs) {
     Inputs["TagName"] = "tag_name";
     Inputs["Latest"] = "latest";
+    Inputs["Draft"] = "draft";
+    Inputs["PreRelease"] = "prerelease";
 })(Inputs = exports.Inputs || (exports.Inputs = {}));
 var Outputs;
 (function (Outputs) {
@@ -5996,9 +5998,14 @@ exports.findLatestRelease = findLatestRelease;
             else {
                 const listResponse = yield github.repos.listReleases({ owner, repo });
                 if (isSuccessStatusCode(listResponse.status)) {
-                    const latestRelease = findLatestRelease(listResponse.data);
+                    const releaseList = listResponse.data
+                        .filter(release => (!release.prerelease || inputs.prerelease) &&
+                        (!release.draft || inputs.draft));
+                    const latestRelease = findLatestRelease(releaseList);
                     if (latestRelease != null)
                         io_helper_1.setOutputs(latestRelease);
+                    else
+                        core.info('The latest release was not found');
                 }
                 else {
                     throw new Error(`Unexpected http ${listResponse.status} during get release list`);
@@ -6039,24 +6046,33 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.setOutputs = exports.getInputs = void 0;
+exports.setOutputs = exports.getInputs = exports.getBooleanInput = void 0;
 const core = __importStar(__nccwpck_require__(832));
 const github_1 = __nccwpck_require__(572);
 const constants_1 = __nccwpck_require__(828);
+function getBooleanInput(name, options) {
+    const value = core.getInput(name, options);
+    return value != null && value.length > 0 &&
+        !['n', 'no', 'f', 'false', '0'].includes(value.toLowerCase());
+}
+exports.getBooleanInput = getBooleanInput;
 function getInputs() {
     const result = {
-        latest: false
+        latest: false,
+        draft: false,
+        prerelease: false
     };
     const tag = core.getInput(constants_1.Inputs.TagName, { required: false });
+    if (tag != null && tag.length > 0)
+        result.tag = tag.trim();
     if (tag == null || tag.length === 0) {
         result.tag = github_1.context.ref.replace('refs/tags/', '');
-        const latest = core.getInput(constants_1.Inputs.Latest, { required: false });
-        if (latest != null && latest.length > 0 &&
-            !['n', 'no', 'f', 'false', '0'].includes(latest.toLowerCase()))
-            result.latest = true;
+        result.latest = getBooleanInput(constants_1.Inputs.Latest, { required: false });
+        if (result.latest) {
+            result.draft = getBooleanInput(constants_1.Inputs.Draft, { required: false });
+            result.prerelease = getBooleanInput(constants_1.Inputs.PreRelease, { required: false });
+        }
     }
-    else
-        result.tag = tag;
     return result;
 }
 exports.getInputs = getInputs;

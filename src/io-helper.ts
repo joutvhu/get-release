@@ -1,3 +1,4 @@
+import {InputOptions} from '@actions/core';
 import * as core from '@actions/core';
 import {context} from '@actions/github';
 import {Inputs, Outputs} from './constants';
@@ -6,6 +7,14 @@ export interface ReleaseInputs {
     tag: string;
 
     latest: boolean;
+    draft: boolean;
+    prerelease: boolean;
+}
+
+export function getBooleanInput(name: string, options?: InputOptions): boolean {
+    const value = core.getInput(name, options);
+    return value != null && value.length > 0 &&
+        !['n', 'no', 'f', 'false', '0'].includes(value.toLowerCase());
 }
 
 /**
@@ -13,18 +22,24 @@ export interface ReleaseInputs {
  */
 export function getInputs(): ReleaseInputs {
     const result: ReleaseInputs | any = {
-        latest: false
+        latest: false,
+        draft: false,
+        prerelease: false
     };
 
     const tag = core.getInput(Inputs.TagName, {required: false});
+    if (tag != null && tag.length > 0)
+        result.tag = tag.trim();
+
     if (tag == null || tag.length === 0) {
         result.tag = context.ref.replace('refs/tags/', '');
 
-        const latest = core.getInput(Inputs.Latest, {required: false});
-        if (latest != null && latest.length > 0 &&
-            !['n', 'no', 'f', 'false', '0'].includes(latest.toLowerCase()))
-            result.latest = true;
-    } else result.tag = tag;
+        result.latest = getBooleanInput(Inputs.Latest, {required: false});
+        if (result.latest) {
+            result.draft = getBooleanInput(Inputs.Draft, {required: false});
+            result.prerelease = getBooleanInput(Inputs.PreRelease, {required: false});
+        }
+    }
 
     return result;
 }
