@@ -21,6 +21,7 @@ lib-cov
 # Coverage directory used by tools like istanbul
 coverage
 *.lcov
+/coverage
 
 # nyc test coverage
 .nyc_output
@@ -37,9 +38,20 @@ bower_components
 # Compiled binary addons (https://nodejs.org/api/addons.html)
 build/Release
 
+# production
+/build
+
 # Dependency directories
 node_modules/
+/node_modules
 jspm_packages/
+/.pnp
+.pnp.js
+
+# Node lock file
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
 
 # TypeScript v1 declaration files
 typings/
@@ -102,3 +114,44 @@ dist
 
 # TernJS port file
 .tern-port
+
+# Only exists if Bazel was run
+/bazel-out
+
+# profiling files
+chrome-profiler-events.json
+speed-measure-plugin.json
+
+# IDEs and editors
+/.idea
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# IDE - VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.history/*
+
+# misc
+/.sass-cache
+/connect.lock
+/libpeerconnection.log
+npm-debug.log
+yarn-error.log
+testem.log
+/typings
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# System Files
+.DS_Store
+Thumbs.db

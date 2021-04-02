@@ -1,0 +1,17 @@
+name: Get Release
+description: Get a release by tag, latest or current release
+author: Giao Ho
+inputs:
+  tag_name:
+    description: Specify tag instead of using checkout tag.
+    required: false
+  latest:
+    description: Should get latest release?
+    required: false
+    default: 'false'
+runs:
+  using: node12
+  main: action/index.js
+branding:
+  icon: tag
+  color: blue
