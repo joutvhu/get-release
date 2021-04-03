@@ -1,20 +1,22 @@
 # This is a basic workflow to help you get started with Actions
 
-name: Release Testing
+name: Latest Testing
 
 # Controls when the action will run.
 on:
-  release:
-    types: [created]
+  workflow_dispatch:
 
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Get current release
+      - name: Get latest release
         uses: ./
         with:
+          latest: true
+          pattern: v.*
+          prerelease: true
           debug: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
