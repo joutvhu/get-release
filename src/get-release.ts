@@ -50,7 +50,7 @@ export function handlerError(message: string, throwing: boolean) {
                         throw new Error(`Unexpected http ${releaseResponse.status} during get release`);
                 } catch (e) {
                     core.debug(e.message);
-                    handlerError(`No release has been found with tag name is ${inputs.tag}`, inputs.throwing);
+                    handlerError(`No release has been found with ${inputs.tag} tag`, inputs.throwing);
                 }
             }
         } else {

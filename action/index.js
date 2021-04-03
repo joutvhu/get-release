@@ -6008,7 +6008,7 @@ exports.handlerError = handlerError;
                     }
                     catch (e) {
                         core.debug(e.message);
-                        handlerError(`No release has been found with tag name is ${inputs.tag}`, inputs.throwing);
+                        handlerError(`No release has been found with ${inputs.tag} tag`, inputs.throwing);
                     }
                 }
             }
