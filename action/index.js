@@ -5915,7 +5915,6 @@ var Outputs;
     Outputs["UploadUrl"] = "upload_url";
     Outputs["TagName"] = "tag_name";
     Outputs["Name"] = "name";
-    Outputs["Body"] = "body";
     Outputs["Draft"] = "draft";
     Outputs["PreRelease"] = "prerelease";
     Outputs["TargetCommitish"] = "target_commitish";
@@ -6105,7 +6104,7 @@ function setOutputs(response, log) {
         const field = constants_1.Outputs[key];
         if (log)
             message += `\n  ${field}: ${JSON.stringify(response[field])}`;
-        core.setOutput(constants_1.Outputs.Id, response[field]);
+        core.setOutput(field, response[field]);
     }
     if (log)
         core.info('Outputs:' + message);
