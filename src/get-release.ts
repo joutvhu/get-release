@@ -36,7 +36,7 @@ export function handlerError(message: string, throwing: boolean) {
         const {owner, repo} = context.repo;
 
         if (!inputs.latest) {
-            if (isNotBlank(inputs.tag))
+            if (!isNotBlank(inputs.tag))
                 handlerError('Current release not found', inputs.throwing);
             else {
                 try {

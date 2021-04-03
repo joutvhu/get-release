@@ -5995,7 +5995,7 @@ exports.handlerError = handlerError;
             const github = github_1.getOctokit(process.env.GITHUB_TOKEN);
             const { owner, repo } = github_1.context.repo;
             if (!inputs.latest) {
-                if (io_helper_1.isNotBlank(inputs.tag))
+                if (!io_helper_1.isNotBlank(inputs.tag))
                     handlerError('Current release not found', inputs.throwing);
                 else {
                     try {
