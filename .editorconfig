@@ -10,7 +10,6 @@ trim_trailing_whitespace = true
 
 [*.{js, ts}]
 indent_size = 4
-quote_type = single
 ij_javascript_use_double_quotes = false
 ij_typescript_use_double_quotes = false
 ij_javascript_import_sort_members = true

@@ -11,13 +11,19 @@ inputs:
     required: false
     default: 'false'
   prerelease:
-    description: Find the latest release including pre-releases
+    # This input will be ignored if `latest = false`
+    description: Find the latest release including the pre-releases
     required: false
-    default: 'false' # Default: ignore pre-releases when finding the latest release
-  draft:
-    description: Find the latest release including draft releases
+  pattern:
+    description: A pattern string to filter the releases by tag_name
     required: false
-    default: 'false' # Default: ignore draft releases when finding the latest release
+
+  debug:
+    description: Show ouputs
+    required: false
+  throwing:
+    description: Fail when no release was found
+    required: false
 runs:
   using: node12
   main: action/index.js

@@ -1,8 +1,10 @@
 export enum Inputs {
     TagName = 'tag_name',
     Latest = 'latest',
-    Draft = 'draft',
-    PreRelease = 'prerelease'
+    Pattern = 'pattern',
+    PreRelease = 'prerelease',
+    Debug = 'debug',
+    Throwing = 'throwing'
 }
 
 export enum Outputs {

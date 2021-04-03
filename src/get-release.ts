@@ -10,6 +10,7 @@ export function isSuccessStatusCode(statusCode?: number): boolean {
 export function findLatestRelease(releases: any[]): any {
     let result: any, latest: number = 0;
 
+    // Find the latest release by `published_at`
     releases.forEach(release => {
         const publishedDate: number = release.published_at ? Date.parse(release.published_at) : 0;
         if (result == null || latest < publishedDate) {
@@ -19,6 +20,12 @@ export function findLatestRelease(releases: any[]): any {
     });
 
     return result;
+}
+
+export function notFoundRelease(message: string, throwing: boolean) {
+    if (throwing)
+        throw new Error(message);
+    else core.warning(message);
 }
 
 (async function run() {
@@ -34,27 +41,24 @@ export function findLatestRelease(releases: any[]): any {
                 .getReleaseByTag({owner, repo, tag: inputs.tag});
 
             if (isSuccessStatusCode(releaseResponse.status))
-                setOutputs(releaseResponse.data);
-            else {
+                setOutputs(releaseResponse.data, inputs.debug);
+            else
                 throw new Error(`Unexpected http ${releaseResponse.status} during get release`);
-            }
         } else {
             const listResponse = await github.repos.listReleases({owner, repo});
 
             if (isSuccessStatusCode(listResponse.status)) {
                 const releaseList = listResponse.data
-                    .filter(release =>
+                    .filter(release => !release.draft &&
                         (!release.prerelease || inputs.prerelease) &&
-                        (!release.draft || inputs.draft));
+                        (!inputs.pattern || inputs.pattern.test(release.tag_name)));
 
-                // Find the latest release by `published_at`
                 const latestRelease: any = findLatestRelease(releaseList);
                 if (latestRelease != null)
-                    setOutputs(latestRelease);
-                else core.info('The latest release was not found');
-            } else {
+                    setOutputs(latestRelease, inputs.debug);
+                else notFoundRelease('The latest release was not found', inputs.throwing);
+            } else
                 throw new Error(`Unexpected http ${listResponse.status} during get release list`);
-            }
         }
     } catch (err) {
         core.setFailed(err.message);

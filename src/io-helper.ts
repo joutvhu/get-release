@@ -1,5 +1,5 @@
-import {InputOptions} from '@actions/core';
 import * as core from '@actions/core';
+import {InputOptions} from '@actions/core';
 import {context} from '@actions/github';
 import {Inputs, Outputs} from './constants';
 
@@ -7,8 +7,11 @@ export interface ReleaseInputs {
     tag: string;
 
     latest: boolean;
-    draft: boolean;
+    pattern: RegExp;
     prerelease: boolean;
+
+    debug: boolean;
+    throwing: boolean;
 }
 
 export function getBooleanInput(name: string, options?: InputOptions): boolean {
@@ -36,15 +39,25 @@ export function getInputs(): ReleaseInputs {
 
         result.latest = getBooleanInput(Inputs.Latest, {required: false});
         if (result.latest) {
-            result.draft = getBooleanInput(Inputs.Draft, {required: false});
+            const pattern = core.getInput(Inputs.Pattern, {required: false});
+            if (typeof pattern === 'string') {
+                try {
+                    result.pattern = new RegExp(pattern);
+                } catch (e) {
+                    delete result.pattern;
+                }
+            }
             result.prerelease = getBooleanInput(Inputs.PreRelease, {required: false});
         }
     }
 
+    result.debug = getBooleanInput(Inputs.Debug, {required: false});
+    result.throwing = getBooleanInput(Inputs.Throwing, {required: false});
+
     return result;
 }
 
-export function setOutputs(outputs: any) {
+export function setOutputs(outputs: any, log?: boolean) {
     // Get the outputs for the created release from the response
     const {
         id,
@@ -62,6 +75,9 @@ export function setOutputs(outputs: any) {
         created_at,
         published_at
     } = outputs;
+
+    if (log)
+        core.debug(JSON.stringify(outputs));
 
     core.setOutput(Outputs.Id, id.toString());
     core.setOutput(Outputs.NodeId, node_id);

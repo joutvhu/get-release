@@ -5900,8 +5900,10 @@ var Inputs;
 (function (Inputs) {
     Inputs["TagName"] = "tag_name";
     Inputs["Latest"] = "latest";
-    Inputs["Draft"] = "draft";
+    Inputs["Pattern"] = "pattern";
     Inputs["PreRelease"] = "prerelease";
+    Inputs["Debug"] = "debug";
+    Inputs["Throwing"] = "throwing";
 })(Inputs = exports.Inputs || (exports.Inputs = {}));
 var Outputs;
 (function (Outputs) {
@@ -5958,7 +5960,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.findLatestRelease = exports.isSuccessStatusCode = void 0;
+exports.notFoundRelease = exports.findLatestRelease = exports.isSuccessStatusCode = void 0;
 const core = __importStar(__nccwpck_require__(832));
 const github_1 = __nccwpck_require__(572);
 const io_helper_1 = __nccwpck_require__(923);
@@ -5980,6 +5982,13 @@ function findLatestRelease(releases) {
     return result;
 }
 exports.findLatestRelease = findLatestRelease;
+function notFoundRelease(message, throwing) {
+    if (throwing)
+        throw new Error(message);
+    else
+        core.warning(message);
+}
+exports.notFoundRelease = notFoundRelease;
 (function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -5990,26 +5999,25 @@ exports.findLatestRelease = findLatestRelease;
                 const releaseResponse = yield github.repos
                     .getReleaseByTag({ owner, repo, tag: inputs.tag });
                 if (isSuccessStatusCode(releaseResponse.status))
-                    io_helper_1.setOutputs(releaseResponse.data);
-                else {
+                    io_helper_1.setOutputs(releaseResponse.data, inputs.debug);
+                else
                     throw new Error(`Unexpected http ${releaseResponse.status} during get release`);
-                }
             }
             else {
                 const listResponse = yield github.repos.listReleases({ owner, repo });
                 if (isSuccessStatusCode(listResponse.status)) {
                     const releaseList = listResponse.data
-                        .filter(release => (!release.prerelease || inputs.prerelease) &&
-                        (!release.draft || inputs.draft));
+                        .filter(release => !release.draft &&
+                        (!release.prerelease || inputs.prerelease) &&
+                        (!inputs.pattern || inputs.pattern.test(release.tag_name)));
                     const latestRelease = findLatestRelease(releaseList);
                     if (latestRelease != null)
-                        io_helper_1.setOutputs(latestRelease);
+                        io_helper_1.setOutputs(latestRelease, inputs.debug);
                     else
-                        core.info('The latest release was not found');
+                        notFoundRelease('The latest release was not found', inputs.throwing);
                 }
-                else {
+                else
                     throw new Error(`Unexpected http ${listResponse.status} during get release list`);
-                }
             }
         }
         catch (err) {
@@ -6069,15 +6077,27 @@ function getInputs() {
         result.tag = github_1.context.ref.replace('refs/tags/', '');
         result.latest = getBooleanInput(constants_1.Inputs.Latest, { required: false });
         if (result.latest) {
-            result.draft = getBooleanInput(constants_1.Inputs.Draft, { required: false });
+            const pattern = core.getInput(constants_1.Inputs.Pattern, { required: false });
+            if (typeof pattern === 'string') {
+                try {
+                    result.pattern = new RegExp(pattern);
+                }
+                catch (e) {
+                    delete result.pattern;
+                }
+            }
             result.prerelease = getBooleanInput(constants_1.Inputs.PreRelease, { required: false });
         }
     }
+    result.debug = getBooleanInput(constants_1.Inputs.Debug, { required: false });
+    result.throwing = getBooleanInput(constants_1.Inputs.Throwing, { required: false });
     return result;
 }
 exports.getInputs = getInputs;
-function setOutputs(outputs) {
+function setOutputs(outputs, log) {
     const { id, node_id, url, html_url, upload_url, assets_url, name, tag_name, body, draft, prerelease, target_commitish, created_at, published_at } = outputs;
+    if (log)
+        core.debug(JSON.stringify(outputs));
     core.setOutput(constants_1.Outputs.Id, id.toString());
     core.setOutput(constants_1.Outputs.NodeId, node_id);
     core.setOutput(constants_1.Outputs.Url, url);
