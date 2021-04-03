@@ -1,4 +1,6 @@
 export enum Inputs {
+    Owner = 'owner',
+    Repo = 'repo',
     TagName = 'tag_name',
     Latest = 'latest',
     Pattern = 'pattern',
