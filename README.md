@@ -9,16 +9,34 @@ See [action.yml](action.yml)
 ## Get Current Release
 
 ```yaml
-name: Get Current Release
+name: Upload Asset To Current Release
 on:
   release:
     types: [created]
 jobs:
   test:
+    runs-on: ubuntu-latest
     steps:
-      - uses: joutvhu/get-release@v1
+      - uses: actions/checkout@v2
+      - name: Build project
+        run: |
+          zip --junk-paths my-artifact README.md
+
+      - name: Get Current Release
+        id: get_current_release
+        uses: joutvhu/get-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.get_current_release.outputs.upload_url }}
+          asset_path: ./my-artifact.zip
+          asset_name: my-artifact.zip
+          asset_content_type: application/zip
 ```
 
 ## Get Release By Tag Name
