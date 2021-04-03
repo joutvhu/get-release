@@ -18,3 +18,12 @@ jobs:
           debug: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Get latest release
+        uses: ./
+        with:
+          latest: true
+          pattern: v.*
+          prerelease: true
+          debug: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
