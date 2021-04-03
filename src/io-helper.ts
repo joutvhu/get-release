@@ -1,12 +1,23 @@
 import * as core from '@actions/core';
+import {InputOptions} from '@actions/core';
 import {context} from '@actions/github';
-import {OctokitResponse} from '@octokit/types';
 import {Inputs, Outputs} from './constants';
 
 export interface ReleaseInputs {
     tag: string;
 
     latest: boolean;
+    pattern: RegExp;
+    prerelease: boolean;
+
+    debug: boolean;
+    throwing: boolean;
+}
+
+export function getBooleanInput(name: string, options?: InputOptions): boolean {
+    const value = core.getInput(name, options);
+    return value != null && value.length > 0 &&
+        !['n', 'no', 'f', 'false', '0'].includes(value.toLowerCase());
 }
 
 /**
@@ -14,40 +25,62 @@ export interface ReleaseInputs {
  */
 export function getInputs(): ReleaseInputs {
     const result: ReleaseInputs | any = {
-        latest: false
+        latest: false,
+        draft: false,
+        prerelease: false
     };
 
     const tag = core.getInput(Inputs.TagName, {required: false});
+    if (tag != null && tag.length > 0)
+        result.tag = tag.trim();
+
     if (tag == null || tag.length === 0) {
         result.tag = context.ref.replace('refs/tags/', '');
 
-        const latest = core.getInput(Inputs.Latest, {required: false});
-        if (latest != null && latest.length > 0 &&
-            !['n', 'no', 'f', 'false', '0'].includes(latest.toLowerCase()))
-            result.latest = true;
-    } else result.tag = tag;
+        result.latest = getBooleanInput(Inputs.Latest, {required: false});
+        if (result.latest) {
+            const pattern = core.getInput(Inputs.Pattern, {required: false});
+            if (typeof pattern === 'string') {
+                try {
+                    result.pattern = new RegExp(pattern);
+                } catch (e) {
+                    delete result.pattern;
+                }
+            }
+            result.prerelease = getBooleanInput(Inputs.PreRelease, {required: false});
+        }
+    }
+
+    result.debug = getBooleanInput(Inputs.Debug, {required: false});
+    result.throwing = getBooleanInput(Inputs.Throwing, {required: false});
 
     return result;
 }
 
-export function setOutputs(outputs: OctokitResponse<any>) {
+export function setOutputs(outputs: any, log?: boolean) {
     // Get the outputs for the created release from the response
     const {
-        data: {
-            id,
-            url,
-            html_url,
-            upload_url,
-            assets_url,
-            name,
-            tag_name,
-            body,
-            draft,
-            prerelease
-        }
+        id,
+        node_id,
+        url,
+        html_url,
+        upload_url,
+        assets_url,
+        name,
+        tag_name,
+        body,
+        draft,
+        prerelease,
+        target_commitish,
+        created_at,
+        published_at
     } = outputs;
 
-    core.setOutput(Outputs.ID, id.toString());
+    if (log)
+        core.debug(JSON.stringify(outputs));
+
+    core.setOutput(Outputs.Id, id.toString());
+    core.setOutput(Outputs.NodeId, node_id);
     core.setOutput(Outputs.Url, url);
     core.setOutput(Outputs.HtmlUrl, html_url);
     core.setOutput(Outputs.UploadUrl, upload_url);
@@ -57,4 +90,7 @@ export function setOutputs(outputs: OctokitResponse<any>) {
     core.setOutput(Outputs.Body, body);
     core.setOutput(Outputs.Draft, draft);
     core.setOutput(Outputs.PreRelease, prerelease);
+    core.setOutput(Outputs.TargetCommitish, target_commitish);
+    core.setOutput(Outputs.PreRelease, created_at);
+    core.setOutput(Outputs.PreRelease, published_at);
 }

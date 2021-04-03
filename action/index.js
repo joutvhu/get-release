@@ -5900,10 +5900,15 @@ var Inputs;
 (function (Inputs) {
     Inputs["TagName"] = "tag_name";
     Inputs["Latest"] = "latest";
+    Inputs["Pattern"] = "pattern";
+    Inputs["PreRelease"] = "prerelease";
+    Inputs["Debug"] = "debug";
+    Inputs["Throwing"] = "throwing";
 })(Inputs = exports.Inputs || (exports.Inputs = {}));
 var Outputs;
 (function (Outputs) {
-    Outputs["ID"] = "id";
+    Outputs["Id"] = "id";
+    Outputs["NodeId"] = "node_id";
     Outputs["Url"] = "url";
     Outputs["HtmlUrl"] = "html_url";
     Outputs["AssetsUrl"] = "assets_url";
@@ -5913,6 +5918,9 @@ var Outputs;
     Outputs["Body"] = "body";
     Outputs["Draft"] = "draft";
     Outputs["PreRelease"] = "prerelease";
+    Outputs["TargetCommitish"] = "target_commitish";
+    Outputs["CreatedAt"] = "created_at";
+    Outputs["PublishedAt"] = "published_at";
 })(Outputs = exports.Outputs || (exports.Outputs = {}));
 
 
@@ -5952,25 +5960,64 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.notFoundRelease = exports.findLatestRelease = exports.isSuccessStatusCode = void 0;
 const core = __importStar(__nccwpck_require__(832));
 const github_1 = __nccwpck_require__(572);
-const utils_1 = __nccwpck_require__(354);
 const io_helper_1 = __nccwpck_require__(923);
+function isSuccessStatusCode(statusCode) {
+    if (!statusCode)
+        return false;
+    return statusCode >= 200 && statusCode < 300;
+}
+exports.isSuccessStatusCode = isSuccessStatusCode;
+function findLatestRelease(releases) {
+    let result, latest = 0;
+    releases.forEach(release => {
+        const publishedDate = release.published_at ? Date.parse(release.published_at) : 0;
+        if (result == null || latest < publishedDate) {
+            result = release;
+            latest = publishedDate;
+        }
+    });
+    return result;
+}
+exports.findLatestRelease = findLatestRelease;
+function notFoundRelease(message, throwing) {
+    if (throwing)
+        throw new Error(message);
+    else
+        core.warning(message);
+}
+exports.notFoundRelease = notFoundRelease;
 (function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const inputs = io_helper_1.getInputs();
-            const github = new utils_1.GitHub(process.env.GITHUB_TOKEN);
+            const github = github_1.getOctokit(process.env.GITHUB_TOKEN);
             const { owner, repo } = github_1.context.repo;
             if (!inputs.latest) {
                 const releaseResponse = yield github.repos
                     .getReleaseByTag({ owner, repo, tag: inputs.tag });
-                core.setOutput('debug', releaseResponse);
-                io_helper_1.setOutputs(releaseResponse);
+                if (isSuccessStatusCode(releaseResponse.status))
+                    io_helper_1.setOutputs(releaseResponse.data, inputs.debug);
+                else
+                    throw new Error(`Unexpected http ${releaseResponse.status} during get release`);
             }
             else {
                 const listResponse = yield github.repos.listReleases({ owner, repo });
-                listResponse.data.find(release => release.tag_name);
+                if (isSuccessStatusCode(listResponse.status)) {
+                    const releaseList = listResponse.data
+                        .filter(release => !release.draft &&
+                        (!release.prerelease || inputs.prerelease) &&
+                        (!inputs.pattern || inputs.pattern.test(release.tag_name)));
+                    const latestRelease = findLatestRelease(releaseList);
+                    if (latestRelease != null)
+                        io_helper_1.setOutputs(latestRelease, inputs.debug);
+                    else
+                        notFoundRelease('The latest release was not found', inputs.throwing);
+                }
+                else
+                    throw new Error(`Unexpected http ${listResponse.status} during get release list`);
             }
         }
         catch (err) {
@@ -6007,30 +6054,52 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.setOutputs = exports.getInputs = void 0;
+exports.setOutputs = exports.getInputs = exports.getBooleanInput = void 0;
 const core = __importStar(__nccwpck_require__(832));
 const github_1 = __nccwpck_require__(572);
 const constants_1 = __nccwpck_require__(828);
+function getBooleanInput(name, options) {
+    const value = core.getInput(name, options);
+    return value != null && value.length > 0 &&
+        !['n', 'no', 'f', 'false', '0'].includes(value.toLowerCase());
+}
+exports.getBooleanInput = getBooleanInput;
 function getInputs() {
     const result = {
-        latest: false
+        latest: false,
+        draft: false,
+        prerelease: false
     };
     const tag = core.getInput(constants_1.Inputs.TagName, { required: false });
+    if (tag != null && tag.length > 0)
+        result.tag = tag.trim();
     if (tag == null || tag.length === 0) {
         result.tag = github_1.context.ref.replace('refs/tags/', '');
-        const latest = core.getInput(constants_1.Inputs.Latest, { required: false });
-        if (latest != null && latest.length > 0 &&
-            !['n', 'no', 'f', 'false', '0'].includes(latest.toLowerCase()))
-            result.latest = true;
+        result.latest = getBooleanInput(constants_1.Inputs.Latest, { required: false });
+        if (result.latest) {
+            const pattern = core.getInput(constants_1.Inputs.Pattern, { required: false });
+            if (typeof pattern === 'string') {
+                try {
+                    result.pattern = new RegExp(pattern);
+                }
+                catch (e) {
+                    delete result.pattern;
+                }
+            }
+            result.prerelease = getBooleanInput(constants_1.Inputs.PreRelease, { required: false });
+        }
     }
-    else
-        result.tag = tag;
+    result.debug = getBooleanInput(constants_1.Inputs.Debug, { required: false });
+    result.throwing = getBooleanInput(constants_1.Inputs.Throwing, { required: false });
     return result;
 }
 exports.getInputs = getInputs;
-function setOutputs(outputs) {
-    const { data: { id, url, html_url, upload_url, assets_url, name, tag_name, body, draft, prerelease } } = outputs;
-    core.setOutput(constants_1.Outputs.ID, id.toString());
+function setOutputs(outputs, log) {
+    const { id, node_id, url, html_url, upload_url, assets_url, name, tag_name, body, draft, prerelease, target_commitish, created_at, published_at } = outputs;
+    if (log)
+        core.debug(JSON.stringify(outputs));
+    core.setOutput(constants_1.Outputs.Id, id.toString());
+    core.setOutput(constants_1.Outputs.NodeId, node_id);
     core.setOutput(constants_1.Outputs.Url, url);
     core.setOutput(constants_1.Outputs.HtmlUrl, html_url);
     core.setOutput(constants_1.Outputs.UploadUrl, upload_url);
@@ -6040,6 +6109,9 @@ function setOutputs(outputs) {
     core.setOutput(constants_1.Outputs.Body, body);
     core.setOutput(constants_1.Outputs.Draft, draft);
     core.setOutput(constants_1.Outputs.PreRelease, prerelease);
+    core.setOutput(constants_1.Outputs.TargetCommitish, target_commitish);
+    core.setOutput(constants_1.Outputs.PreRelease, created_at);
+    core.setOutput(constants_1.Outputs.PreRelease, published_at);
 }
 exports.setOutputs = setOutputs;
 
