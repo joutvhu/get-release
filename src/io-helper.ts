@@ -14,10 +14,15 @@ export interface ReleaseInputs {
     throwing: boolean;
 }
 
+export function isNotBlank(value: any): boolean {
+    return value !== null && value !== undefined && (value.length === undefined || value.length > 0);
+}
+
 export function getBooleanInput(name: string, options?: InputOptions): boolean {
     const value = core.getInput(name, options);
-    return value != null && value.length > 0 &&
-        !['n', 'no', 'f', 'false', '0'].includes(value.toLowerCase());
+    return isNotBlank(value) &&
+        ['y', 'yes', 't', 'true', 'e', 'enable', 'enabled', 'on', 'ok', '1']
+            .includes(value.trim().toLowerCase());
 }
 
 /**
@@ -31,11 +36,11 @@ export function getInputs(): ReleaseInputs {
     };
 
     const tag = core.getInput(Inputs.TagName, {required: false});
-    if (tag != null && tag.length > 0)
+    if (isNotBlank(tag))
         result.tag = tag.trim();
-
-    if (tag == null || tag.length === 0) {
-        result.tag = context.ref.replace('refs/tags/', '');
+    else {
+        if (typeof context.ref === 'string' && context.ref.startsWith('refs/tags/'))
+            result.tag = context.ref.replace('refs/tags/', '');
 
         result.latest = getBooleanInput(Inputs.Latest, {required: false});
         if (result.latest) {

@@ -1,6 +1,6 @@
 import * as core from '@actions/core';
 import {context, getOctokit} from '@actions/github';
-import {getInputs, ReleaseInputs, setOutputs} from './io-helper';
+import {getInputs, isNotBlank, ReleaseInputs, setOutputs} from './io-helper';
 
 export function isSuccessStatusCode(statusCode?: number): boolean {
     if (!statusCode) return false;
@@ -36,17 +36,22 @@ export function handlerError(message: string, throwing: boolean) {
         const {owner, repo} = context.repo;
 
         if (!inputs.latest) {
-            if (inputs.tag == null || inputs.tag.length === 0)
+            if (isNotBlank(inputs.tag))
                 handlerError('Current release not found', inputs.throwing);
             else {
-                // Get a release from the tag name
-                const releaseResponse = await github.repos
-                    .getReleaseByTag({owner, repo, tag: inputs.tag});
+                try {
+                    // Get a release from the tag name
+                    const releaseResponse = await github.repos
+                        .getReleaseByTag({owner, repo, tag: inputs.tag});
 
-                if (isSuccessStatusCode(releaseResponse.status))
-                    setOutputs(releaseResponse.data, inputs.debug);
-                else
-                    throw new Error(`Unexpected http ${releaseResponse.status} during get release`);
+                    if (isSuccessStatusCode(releaseResponse.status))
+                        setOutputs(releaseResponse.data, inputs.debug);
+                    else
+                        throw new Error(`Unexpected http ${releaseResponse.status} during get release`);
+                } catch (e) {
+                    core.debug(e.message);
+                    handlerError(`No release has been found with tag name is ${inputs.tag}`, inputs.throwing);
+                }
             }
         } else {
             const listResponse = await github.repos.listReleases({owner, repo});
@@ -58,7 +63,7 @@ export function handlerError(message: string, throwing: boolean) {
                         (!inputs.pattern || inputs.pattern.test(release.tag_name)));
 
                 const latestRelease: any = findLatestRelease(releaseList);
-                if (latestRelease != null)
+                if (isNotBlank(latestRelease))
                     setOutputs(latestRelease, inputs.debug);
                 else handlerError('The latest release was not found', inputs.throwing);
             } else
