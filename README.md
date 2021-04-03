@@ -45,7 +45,7 @@ jobs:
 steps:
   - uses: joutvhu/get-release@v1
     with:
-      tag_name: 'v1.0.0'
+      tag_name: v1.0.0
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
