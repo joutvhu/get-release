@@ -5995,8 +5995,9 @@ exports.handlerError = handlerError;
         try {
             const inputs = io_helper_1.getInputs();
             const github = github_1.getOctokit(process.env.GITHUB_TOKEN);
+            core.info(`Start get release with:\n  owner: ${inputs.owner}\n  repo: ${inputs.repo}`);
             if (!inputs.latest) {
-                if (!io_helper_1.isNotBlank(inputs.tag))
+                if (io_helper_1.isBlank(inputs.tag))
                     handlerError('Current release not found', inputs.throwing);
                 else {
                     try {
@@ -6078,10 +6079,14 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.setOutputs = exports.getInputs = exports.getBooleanInput = exports.isNotBlank = void 0;
+exports.setOutputs = exports.getInputs = exports.getBooleanInput = exports.isNotBlank = exports.isBlank = void 0;
 const core = __importStar(__nccwpck_require__(832));
 const github_1 = __nccwpck_require__(572);
 const constants_1 = __nccwpck_require__(828);
+function isBlank(value) {
+    return value === null || value === undefined || (value.length !== undefined && value.length === 0);
+}
+exports.isBlank = isBlank;
 function isNotBlank(value) {
     return value !== null && value !== undefined && (value.length === undefined || value.length > 0);
 }
@@ -6100,10 +6105,10 @@ function getInputs() {
         prerelease: false
     };
     result.owner = core.getInput(constants_1.Inputs.Owner, { required: false });
-    if (isNotBlank(result.owner))
+    if (isBlank(result.owner))
         result.owner = github_1.context.repo.owner;
     result.repo = core.getInput(constants_1.Inputs.Repo, { required: false });
-    if (isNotBlank(result.repo))
+    if (isBlank(result.repo))
         result.repo = github_1.context.repo.repo;
     const tag = core.getInput(constants_1.Inputs.TagName, { required: false });
     if (isNotBlank(tag))
