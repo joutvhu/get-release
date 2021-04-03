@@ -77,7 +77,7 @@ export function setOutputs(outputs: any, log?: boolean) {
     } = outputs;
 
     if (log)
-        core.debug(JSON.stringify(outputs));
+        core.info(JSON.stringify(outputs));
 
     core.setOutput(Outputs.Id, id.toString());
     core.setOutput(Outputs.NodeId, node_id);

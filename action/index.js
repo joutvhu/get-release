@@ -6019,6 +6019,7 @@ exports.notFoundRelease = notFoundRelease;
                 else
                     throw new Error(`Unexpected http ${listResponse.status} during get release list`);
             }
+            core.info('Get release has finished successfully');
         }
         catch (err) {
             core.setFailed(err.message);
@@ -6097,7 +6098,7 @@ exports.getInputs = getInputs;
 function setOutputs(outputs, log) {
     const { id, node_id, url, html_url, upload_url, assets_url, name, tag_name, body, draft, prerelease, target_commitish, created_at, published_at } = outputs;
     if (log)
-        core.debug(JSON.stringify(outputs));
+        core.info(JSON.stringify(outputs));
     core.setOutput(constants_1.Outputs.Id, id.toString());
     core.setOutput(constants_1.Outputs.NodeId, node_id);
     core.setOutput(constants_1.Outputs.Url, url);
