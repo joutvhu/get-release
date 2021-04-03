@@ -5960,7 +5960,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.notFoundRelease = exports.findLatestRelease = exports.isSuccessStatusCode = void 0;
+exports.handlerError = exports.findLatestRelease = exports.isSuccessStatusCode = void 0;
 const core = __importStar(__nccwpck_require__(832));
 const github_1 = __nccwpck_require__(572);
 const io_helper_1 = __nccwpck_require__(923);
@@ -5982,13 +5982,13 @@ function findLatestRelease(releases) {
     return result;
 }
 exports.findLatestRelease = findLatestRelease;
-function notFoundRelease(message, throwing) {
+function handlerError(message, throwing) {
     if (throwing)
         throw new Error(message);
     else
         core.warning(message);
 }
-exports.notFoundRelease = notFoundRelease;
+exports.handlerError = handlerError;
 (function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -5996,12 +5996,16 @@ exports.notFoundRelease = notFoundRelease;
             const github = github_1.getOctokit(process.env.GITHUB_TOKEN);
             const { owner, repo } = github_1.context.repo;
             if (!inputs.latest) {
-                const releaseResponse = yield github.repos
-                    .getReleaseByTag({ owner, repo, tag: inputs.tag });
-                if (isSuccessStatusCode(releaseResponse.status))
-                    io_helper_1.setOutputs(releaseResponse.data, inputs.debug);
-                else
-                    throw new Error(`Unexpected http ${releaseResponse.status} during get release`);
+                if (inputs.tag == null || inputs.tag.length === 0)
+                    handlerError('Current release not found', inputs.throwing);
+                else {
+                    const releaseResponse = yield github.repos
+                        .getReleaseByTag({ owner, repo, tag: inputs.tag });
+                    if (isSuccessStatusCode(releaseResponse.status))
+                        io_helper_1.setOutputs(releaseResponse.data, inputs.debug);
+                    else
+                        throw new Error(`Unexpected http ${releaseResponse.status} during get release`);
+                }
             }
             else {
                 const listResponse = yield github.repos.listReleases({ owner, repo });
@@ -6014,7 +6018,7 @@ exports.notFoundRelease = notFoundRelease;
                     if (latestRelease != null)
                         io_helper_1.setOutputs(latestRelease, inputs.debug);
                     else
-                        notFoundRelease('The latest release was not found', inputs.throwing);
+                        handlerError('The latest release was not found', inputs.throwing);
                 }
                 else
                     throw new Error(`Unexpected http ${listResponse.status} during get release list`);

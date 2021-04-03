@@ -22,7 +22,7 @@ export function findLatestRelease(releases: any[]): any {
     return result;
 }
 
-export function notFoundRelease(message: string, throwing: boolean) {
+export function handlerError(message: string, throwing: boolean) {
     if (throwing)
         throw new Error(message);
     else core.warning(message);
@@ -36,14 +36,18 @@ export function notFoundRelease(message: string, throwing: boolean) {
         const {owner, repo} = context.repo;
 
         if (!inputs.latest) {
-            // Get a release from the tag name
-            const releaseResponse = await github.repos
-                .getReleaseByTag({owner, repo, tag: inputs.tag});
+            if (inputs.tag == null || inputs.tag.length === 0)
+                handlerError('Current release not found', inputs.throwing);
+            else {
+                // Get a release from the tag name
+                const releaseResponse = await github.repos
+                    .getReleaseByTag({owner, repo, tag: inputs.tag});
 
-            if (isSuccessStatusCode(releaseResponse.status))
-                setOutputs(releaseResponse.data, inputs.debug);
-            else
-                throw new Error(`Unexpected http ${releaseResponse.status} during get release`);
+                if (isSuccessStatusCode(releaseResponse.status))
+                    setOutputs(releaseResponse.data, inputs.debug);
+                else
+                    throw new Error(`Unexpected http ${releaseResponse.status} during get release`);
+            }
         } else {
             const listResponse = await github.repos.listReleases({owner, repo});
 
@@ -56,7 +60,7 @@ export function notFoundRelease(message: string, throwing: boolean) {
                 const latestRelease: any = findLatestRelease(releaseList);
                 if (latestRelease != null)
                     setOutputs(latestRelease, inputs.debug);
-                else notFoundRelease('The latest release was not found', inputs.throwing);
+                else handlerError('The latest release was not found', inputs.throwing);
             } else
                 throw new Error(`Unexpected http ${listResponse.status} during get release list`);
         }
