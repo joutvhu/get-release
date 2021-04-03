@@ -6007,8 +6007,10 @@ exports.handlerError = handlerError;
                             throw new Error(`Unexpected http ${releaseResponse.status} during get release`);
                     }
                     catch (e) {
-                        core.debug(e.message);
-                        handlerError(`No release has been found with ${inputs.tag} tag`, inputs.throwing);
+                        if (e.status === 404)
+                            handlerError(`No release has been found with ${inputs.tag} tag`, inputs.throwing);
+                        else
+                            handlerError(e.message, inputs.throwing);
                     }
                 }
             }

@@ -37,3 +37,12 @@ jobs:
           debug: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Not found release
+        uses: ./
+        with:
+          latest: true
+          pattern: x.*
+          debug: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
