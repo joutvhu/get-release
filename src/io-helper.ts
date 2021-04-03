@@ -16,6 +16,10 @@ export interface ReleaseInputs {
     throwing: boolean;
 }
 
+export function isBlank(value: any): boolean {
+    return value === null || value === undefined || (value.length !== undefined && value.length === 0);
+}
+
 export function isNotBlank(value: any): boolean {
     return value !== null && value !== undefined && (value.length === undefined || value.length > 0);
 }
@@ -38,11 +42,11 @@ export function getInputs(): ReleaseInputs {
     };
 
     result.owner = core.getInput(Inputs.Owner, {required: false});
-    if (isNotBlank(result.owner))
+    if (isBlank(result.owner))
         result.owner = context.repo.owner;
 
     result.repo = core.getInput(Inputs.Repo, {required: false});
-    if (isNotBlank(result.repo))
+    if (isBlank(result.repo))
         result.repo = context.repo.repo;
 
     const tag = core.getInput(Inputs.TagName, {required: false});

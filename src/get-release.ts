@@ -1,6 +1,6 @@
 import * as core from '@actions/core';
 import {getOctokit} from '@actions/github';
-import {getInputs, isNotBlank, ReleaseInputs, setOutputs} from './io-helper';
+import {getInputs, isBlank, isNotBlank, ReleaseInputs, setOutputs} from './io-helper';
 
 export function isSuccessStatusCode(statusCode?: number): boolean {
     if (!statusCode) return false;
@@ -33,8 +33,10 @@ export function handlerError(message: string, throwing: boolean) {
         const inputs: ReleaseInputs = getInputs();
         const github = getOctokit(process.env.GITHUB_TOKEN as string);
 
+        core.info(`Start get release with:\n  owner: ${inputs.owner}\n  repo: ${inputs.repo}`);
+
         if (!inputs.latest) {
-            if (!isNotBlank(inputs.tag))
+            if (isBlank(inputs.tag))
                 handlerError('Current release not found', inputs.throwing);
             else {
                 try {
