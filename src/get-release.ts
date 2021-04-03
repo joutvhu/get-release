@@ -60,6 +60,8 @@ export function notFoundRelease(message: string, throwing: boolean) {
             } else
                 throw new Error(`Unexpected http ${listResponse.status} during get release list`);
         }
+
+        core.info('Get release has finished successfully');
     } catch (err) {
         core.setFailed(err.message);
     }

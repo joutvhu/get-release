@@ -6019,6 +6019,7 @@ exports.notFoundRelease = notFoundRelease;
                 else
                     throw new Error(`Unexpected http ${listResponse.status} during get release list`);
             }
+            core.info('Get release has finished successfully');
         }
         catch (err) {
             core.setFailed(err.message);
@@ -6094,24 +6095,16 @@ function getInputs() {
     return result;
 }
 exports.getInputs = getInputs;
-function setOutputs(outputs, log) {
-    const { id, node_id, url, html_url, upload_url, assets_url, name, tag_name, body, draft, prerelease, target_commitish, created_at, published_at } = outputs;
+function setOutputs(response, log) {
+    let message = '';
+    for (const key in constants_1.Outputs) {
+        const field = constants_1.Outputs[key];
+        if (log)
+            message += `\n  ${field}: ${JSON.stringify(response[field])}`;
+        core.setOutput(constants_1.Outputs.Id, response[field]);
+    }
     if (log)
-        core.debug(JSON.stringify(outputs));
-    core.setOutput(constants_1.Outputs.Id, id.toString());
-    core.setOutput(constants_1.Outputs.NodeId, node_id);
-    core.setOutput(constants_1.Outputs.Url, url);
-    core.setOutput(constants_1.Outputs.HtmlUrl, html_url);
-    core.setOutput(constants_1.Outputs.UploadUrl, upload_url);
-    core.setOutput(constants_1.Outputs.AssetsUrl, assets_url);
-    core.setOutput(constants_1.Outputs.TagName, tag_name);
-    core.setOutput(constants_1.Outputs.Name, name);
-    core.setOutput(constants_1.Outputs.Body, body);
-    core.setOutput(constants_1.Outputs.Draft, draft);
-    core.setOutput(constants_1.Outputs.PreRelease, prerelease);
-    core.setOutput(constants_1.Outputs.TargetCommitish, target_commitish);
-    core.setOutput(constants_1.Outputs.PreRelease, created_at);
-    core.setOutput(constants_1.Outputs.PreRelease, published_at);
+        core.info('Outputs:' + message);
 }
 exports.setOutputs = setOutputs;
 
