@@ -5995,15 +5995,21 @@ exports.handlerError = handlerError;
             const github = github_1.getOctokit(process.env.GITHUB_TOKEN);
             const { owner, repo } = github_1.context.repo;
             if (!inputs.latest) {
-                if (inputs.tag == null || inputs.tag.length === 0)
+                if (io_helper_1.isNotBlank(inputs.tag))
                     handlerError('Current release not found', inputs.throwing);
                 else {
-                    const releaseResponse = yield github.repos
-                        .getReleaseByTag({ owner, repo, tag: inputs.tag });
-                    if (isSuccessStatusCode(releaseResponse.status))
-                        io_helper_1.setOutputs(releaseResponse.data, inputs.debug);
-                    else
-                        throw new Error(`Unexpected http ${releaseResponse.status} during get release`);
+                    try {
+                        const releaseResponse = yield github.repos
+                            .getReleaseByTag({ owner, repo, tag: inputs.tag });
+                        if (isSuccessStatusCode(releaseResponse.status))
+                            io_helper_1.setOutputs(releaseResponse.data, inputs.debug);
+                        else
+                            throw new Error(`Unexpected http ${releaseResponse.status} during get release`);
+                    }
+                    catch (e) {
+                        core.debug(e.message);
+                        handlerError(`No release has been found with tag name is ${inputs.tag}`, inputs.throwing);
+                    }
                 }
             }
             else {
@@ -6014,7 +6020,7 @@ exports.handlerError = handlerError;
                         (!release.prerelease || inputs.prerelease) &&
                         (!inputs.pattern || inputs.pattern.test(release.tag_name)));
                     const latestRelease = findLatestRelease(releaseList);
-                    if (latestRelease != null)
+                    if (io_helper_1.isNotBlank(latestRelease))
                         io_helper_1.setOutputs(latestRelease, inputs.debug);
                     else
                         handlerError('The latest release was not found', inputs.throwing);
@@ -6058,14 +6064,19 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.setOutputs = exports.getInputs = exports.getBooleanInput = void 0;
+exports.setOutputs = exports.getInputs = exports.getBooleanInput = exports.isNotBlank = void 0;
 const core = __importStar(__nccwpck_require__(832));
 const github_1 = __nccwpck_require__(572);
 const constants_1 = __nccwpck_require__(828);
+function isNotBlank(value) {
+    return value !== null && value !== undefined && (value.length === undefined || value.length > 0);
+}
+exports.isNotBlank = isNotBlank;
 function getBooleanInput(name, options) {
     const value = core.getInput(name, options);
-    return value != null && value.length > 0 &&
-        !['n', 'no', 'f', 'false', '0'].includes(value.toLowerCase());
+    return isNotBlank(value) &&
+        ['y', 'yes', 't', 'true', 'e', 'enable', 'enabled', 'on', 'ok', '1']
+            .includes(value.trim().toLowerCase());
 }
 exports.getBooleanInput = getBooleanInput;
 function getInputs() {
@@ -6075,10 +6086,11 @@ function getInputs() {
         prerelease: false
     };
     const tag = core.getInput(constants_1.Inputs.TagName, { required: false });
-    if (tag != null && tag.length > 0)
+    if (isNotBlank(tag))
         result.tag = tag.trim();
-    if (tag == null || tag.length === 0) {
-        result.tag = github_1.context.ref.replace('refs/tags/', '');
+    else {
+        if (typeof github_1.context.ref === 'string' && github_1.context.ref.startsWith('refs/tags/'))
+            result.tag = github_1.context.ref.replace('refs/tags/', '');
         result.latest = getBooleanInput(constants_1.Inputs.Latest, { required: false });
         if (result.latest) {
             const pattern = core.getInput(constants_1.Inputs.Pattern, { required: false });
