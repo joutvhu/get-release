@@ -1,5 +1,5 @@
 import * as core from '@actions/core';
-import {context, getOctokit} from '@actions/github';
+import {getOctokit} from '@actions/github';
 import {getInputs, isNotBlank, ReleaseInputs, setOutputs} from './io-helper';
 
 export function isSuccessStatusCode(statusCode?: number): boolean {
@@ -32,8 +32,6 @@ export function handlerError(message: string, throwing: boolean) {
     try {
         const inputs: ReleaseInputs = getInputs();
         const github = getOctokit(process.env.GITHUB_TOKEN as string);
-        // Get owner and repo from context of payload that triggered the action
-        const {owner, repo} = context.repo;
 
         if (!inputs.latest) {
             if (!isNotBlank(inputs.tag))
@@ -42,7 +40,11 @@ export function handlerError(message: string, throwing: boolean) {
                 try {
                     // Get a release from the tag name
                     const releaseResponse = await github.repos
-                        .getReleaseByTag({owner, repo, tag: inputs.tag});
+                        .getReleaseByTag({
+                            owner: inputs.owner,
+                            repo: inputs.repo,
+                            tag: inputs.tag
+                        });
 
                     if (isSuccessStatusCode(releaseResponse.status))
                         setOutputs(releaseResponse.data, inputs.debug);
@@ -56,7 +58,10 @@ export function handlerError(message: string, throwing: boolean) {
                 }
             }
         } else {
-            const listResponse = await github.repos.listReleases({owner, repo});
+            const listResponse = await github.repos.listReleases({
+                owner: inputs.owner,
+                repo: inputs.repo
+            });
 
             if (isSuccessStatusCode(listResponse.status)) {
                 const releaseList = listResponse.data
@@ -67,7 +72,14 @@ export function handlerError(message: string, throwing: boolean) {
                 const latestRelease: any = findLatestRelease(releaseList);
                 if (isNotBlank(latestRelease))
                     setOutputs(latestRelease, inputs.debug);
-                else handlerError('The latest release was not found', inputs.throwing);
+                else {
+                    if (!!inputs.pattern)
+                        handlerError(`No release had a tag name matching /${inputs.pattern.source}/`,
+                            inputs.throwing);
+                    else
+                        handlerError('The latest release was not found',
+                            inputs.throwing);
+                }
             } else
                 throw new Error(`Unexpected http ${listResponse.status} during get release list`);
         }

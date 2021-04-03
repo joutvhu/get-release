@@ -4,6 +4,8 @@ import {context} from '@actions/github';
 import {Inputs, Outputs} from './constants';
 
 export interface ReleaseInputs {
+    owner: string;
+    repo: string;
     tag: string;
 
     latest: boolean;
@@ -34,6 +36,14 @@ export function getInputs(): ReleaseInputs {
         draft: false,
         prerelease: false
     };
+
+    result.owner = core.getInput(Inputs.Owner, {required: false});
+    if (isNotBlank(result.owner))
+        result.owner = context.repo.owner;
+
+    result.repo = core.getInput(Inputs.Repo, {required: false});
+    if (isNotBlank(result.repo))
+        result.repo = context.repo.repo;
 
     const tag = core.getInput(Inputs.TagName, {required: false});
     if (isNotBlank(tag))

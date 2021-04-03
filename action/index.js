@@ -5898,6 +5898,8 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Outputs = exports.Inputs = void 0;
 var Inputs;
 (function (Inputs) {
+    Inputs["Owner"] = "owner";
+    Inputs["Repo"] = "repo";
     Inputs["TagName"] = "tag_name";
     Inputs["Latest"] = "latest";
     Inputs["Pattern"] = "pattern";
@@ -5993,14 +5995,17 @@ exports.handlerError = handlerError;
         try {
             const inputs = io_helper_1.getInputs();
             const github = github_1.getOctokit(process.env.GITHUB_TOKEN);
-            const { owner, repo } = github_1.context.repo;
             if (!inputs.latest) {
                 if (!io_helper_1.isNotBlank(inputs.tag))
                     handlerError('Current release not found', inputs.throwing);
                 else {
                     try {
                         const releaseResponse = yield github.repos
-                            .getReleaseByTag({ owner, repo, tag: inputs.tag });
+                            .getReleaseByTag({
+                            owner: inputs.owner,
+                            repo: inputs.repo,
+                            tag: inputs.tag
+                        });
                         if (isSuccessStatusCode(releaseResponse.status))
                             io_helper_1.setOutputs(releaseResponse.data, inputs.debug);
                         else
@@ -6015,7 +6020,10 @@ exports.handlerError = handlerError;
                 }
             }
             else {
-                const listResponse = yield github.repos.listReleases({ owner, repo });
+                const listResponse = yield github.repos.listReleases({
+                    owner: inputs.owner,
+                    repo: inputs.repo
+                });
                 if (isSuccessStatusCode(listResponse.status)) {
                     const releaseList = listResponse.data
                         .filter(release => !release.draft &&
@@ -6024,8 +6032,12 @@ exports.handlerError = handlerError;
                     const latestRelease = findLatestRelease(releaseList);
                     if (io_helper_1.isNotBlank(latestRelease))
                         io_helper_1.setOutputs(latestRelease, inputs.debug);
-                    else
-                        handlerError('The latest release was not found', inputs.throwing);
+                    else {
+                        if (!!inputs.pattern)
+                            handlerError(`No release had a tag name matching /${inputs.pattern.source}/`, inputs.throwing);
+                        else
+                            handlerError('The latest release was not found', inputs.throwing);
+                    }
                 }
                 else
                     throw new Error(`Unexpected http ${listResponse.status} during get release list`);
@@ -6087,6 +6099,12 @@ function getInputs() {
         draft: false,
         prerelease: false
     };
+    result.owner = core.getInput(constants_1.Inputs.Owner, { required: false });
+    if (isNotBlank(result.owner))
+        result.owner = github_1.context.repo.owner;
+    result.repo = core.getInput(constants_1.Inputs.Repo, { required: false });
+    if (isNotBlank(result.repo))
+        result.repo = github_1.context.repo.repo;
     const tag = core.getInput(constants_1.Inputs.TagName, { required: false });
     if (isNotBlank(tag))
         result.tag = tag.trim();

@@ -2,6 +2,15 @@ name: Get Release
 description: Get a release by tag, latest or current release
 author: Giao Ho
 inputs:
+  owner:
+    # Default: Current owner
+    description: The name of the owner of the repo. Used to identify the owner of the repository.
+    required: false
+  repo:
+    # Default: Current repository
+    description: The name of the repository. Used to identify the repository on which to release.
+    required: false
+
   tag_name:
     description: Specify tag instead of using checkout tag.
     required: false
