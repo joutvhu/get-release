@@ -16,7 +16,6 @@ export enum Outputs {
     UploadUrl = 'upload_url',
     TagName = 'tag_name',
     Name = 'name',
-    Body = 'body',
     Draft = 'draft',
     PreRelease = 'prerelease',
     TargetCommitish = 'target_commitish',

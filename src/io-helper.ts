@@ -64,7 +64,7 @@ export function setOutputs(response: any, log?: boolean) {
         const field: string = (Outputs as any)[key];
         if (log)
             message += `\n  ${field}: ${JSON.stringify(response[field])}`;
-        core.setOutput(Outputs.Id, response[field]);
+        core.setOutput(field, response[field]);
     }
 
     if (log)

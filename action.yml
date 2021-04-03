@@ -40,15 +40,13 @@ outputs:
   name:
     description: The release name
   tag_name:
-    description: The tag name
-  body:
-    description: The release body
+    description: The git tag associated with the release
   draft:
     description: Is draft
   prerelease:
     description: Is pre-release
   target_commitish:
-    description: The branch name
+    description: The release was create to which target branch
   created_at:
     description: Created date
   published_at:
