@@ -38,7 +38,7 @@ jobs:
 
       - name: Get Current Release
         id: get_current_release
-        uses: joutvhu/get-release@v1
+        uses: ./
         with:
           debug: true
         env:
