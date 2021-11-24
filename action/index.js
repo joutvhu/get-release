@@ -5922,6 +5922,7 @@ var Outputs;
     Outputs["TargetCommitish"] = "target_commitish";
     Outputs["CreatedAt"] = "created_at";
     Outputs["PublishedAt"] = "published_at";
+    Outputs["Body"] = "body";
 })(Outputs = exports.Outputs || (exports.Outputs = {}));
 
 

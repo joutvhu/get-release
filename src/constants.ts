@@ -22,5 +22,6 @@ export enum Outputs {
     PreRelease = 'prerelease',
     TargetCommitish = 'target_commitish',
     CreatedAt = 'created_at',
-    PublishedAt = 'published_at'
+    PublishedAt = 'published_at',
+    Body = 'body'
 }
