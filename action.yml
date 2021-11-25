@@ -60,6 +60,8 @@ outputs:
     description: Created date
   published_at:
     description: Published date
+  body:
+    description: The release body
 runs:
   using: node12
   main: action/index.js
