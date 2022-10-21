@@ -63,7 +63,7 @@ outputs:
   body:
     description: The release body
 runs:
-  using: node12
+  using: node16
   main: action/index.js
 branding:
   icon: tag

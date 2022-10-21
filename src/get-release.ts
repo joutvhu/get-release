@@ -41,7 +41,7 @@ export function handlerError(message: string, throwing: boolean) {
             else {
                 try {
                     // Get a release from the tag name
-                    const releaseResponse = await github.repos
+                    const releaseResponse = await github.rest.repos
                         .getReleaseByTag({
                             owner: inputs.owner,
                             repo: inputs.repo,
@@ -52,7 +52,7 @@ export function handlerError(message: string, throwing: boolean) {
                         setOutputs(releaseResponse.data, inputs.debug);
                     else
                         throw new Error(`Unexpected http ${releaseResponse.status} during get release`);
-                } catch (e) {
+                } catch (e: any) {
                     if (e.status === 404)
                         handlerError(`No release has been found with ${inputs.tag} tag`, inputs.throwing);
                     else
@@ -60,7 +60,7 @@ export function handlerError(message: string, throwing: boolean) {
                 }
             }
         } else {
-            const listResponse = await github.repos.listReleases({
+            const listResponse = await github.rest.repos.listReleases({
                 owner: inputs.owner,
                 repo: inputs.repo
             });
@@ -87,7 +87,7 @@ export function handlerError(message: string, throwing: boolean) {
         }
 
         core.info('Get release has finished successfully');
-    } catch (err) {
+    } catch (err: any) {
         core.setFailed(err.message);
     }
 })();
