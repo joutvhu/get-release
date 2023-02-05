@@ -1,0 +1,31 @@
+name: Update Major Version Tag
+
+on:
+  release:
+    types: [released]
+
+jobs:
+  tagging:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Get current release
+        id: current_release
+        uses: joutvhu/get-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get major version from release
+        id: major_version
+        run: |
+          echo "::set-output name=version::$(echo ${{ steps.current_release.outputs.tag_name }} | cut -f 1 -d .)"
+
+      - name: Create or update major version
+        uses: joutvhu/create-tag@v1
+        with:
+          tag_name: ${{ steps.major_version.outputs.version }}
+          message: ${{ steps.current_release.outputs.name }}
+          on_tag_exists: update
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
