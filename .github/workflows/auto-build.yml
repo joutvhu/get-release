@@ -1,0 +1,39 @@
+name: Rebuild Changes
+
+on:
+  push:
+    branches:
+      - 'main'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install packages
+        run: npm ci
+
+      - name: Rebuild
+        run: npm run release
+
+      - name: Check change status
+        id: check_status
+        run: |
+          git status -s
+          echo "::set-output name=changed::$(git status -s | grep -q 'action/index.js' && echo 'true' || echo 'false')"
+
+      - name: Push new action/index.js
+        if: ${{ steps.check_status.outputs.changed == 'true' }}
+        run: |
+          git config --global user.name "GitHub"
+          git config --global user.email "noreply@github.com"
+          git commit -m "Rebuild action/index.js" --author="github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
+          git push origin
