@@ -15,3 +15,4 @@ updates:
       - dependency-name: "@types/node"
     labels:
       - "dependency"
+    target-branch: "develop"
