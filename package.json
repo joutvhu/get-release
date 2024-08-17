@@ -36,7 +36,7 @@
     "tslib": "^2.6.3"
   },
   "devDependencies": {
-    "@tsconfig/recommended": "^1.0.6",
+    "@tsconfig/recommended": "^1.0.7",
     "@types/node": "^20.10.5",
     "@typescript-eslint/eslint-plugin": "^8.0.1",
     "@typescript-eslint/parser": "^7.16.1",
