@@ -39,7 +39,7 @@
     "@tsconfig/recommended": "^1.0.7",
     "@types/node": "^20.10.5",
     "@typescript-eslint/eslint-plugin": "^8.18.1",
-    "@typescript-eslint/parser": "^8.7.0",
+    "@typescript-eslint/parser": "^8.53.1",
     "@vercel/ncc": "^0.38.3",
     "eslint": "^9.38.0",
     "eslint-plugin-import": "^2.31.0",
